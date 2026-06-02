@@ -1,0 +1,145 @@
+https://github.com/esphome/feature-requests/issues/1187 was a good starting point, but I could not make the ilixxx drivers work.
+What I ended up doing instead is using the mipi_spi display driver. It’s … not great, but it’s the only one I could wrestle into submission on this panel.
+That being, said, the driver is also lacking (or at least I could not find them) proper rotation and mirroring functions, so I had to get a bit … creative in solving some problems. Basically the screen is physically rotated 180 and since the touch coordinates are now wonky, I corrected that in code. If it’s stupid but it works … :man_shrugging: 
+
+globals:
+  - id: last_color
+    type: std::string
+    initial_value: "\"\""
+
+font:
+  - file: "gfonts://Roboto"
+    id: default_font
+    size: 24
+
+spi:
+  - id: spi_tft
+    clk_pin: 18
+    mosi_pin: 23
+    miso_pin: 19
+
+  - id: spi_touch
+    clk_pin: 25
+    mosi_pin: 32
+    miso_pin: 34
+
+display:
+  - platform: mipi_spi
+    model: st7796
+    spi_id: spi_tft
+    cs_pin: 5
+    dc_pin: 17
+    reset_pin: 16
+
+    rotation: 90
+    spi_mode: 3
+    color_order: bgr
+    pixel_mode: 16bit
+
+    auto_clear_enabled: true
+
+    lambda: |-
+      it.fill(Color(0, 0, 0));
+
+      // ---- CORNER COLOR BOXES ----
+      it.filled_rectangle(0, 0, 40, 40, Color(255, 0, 0));                               // RED TL
+      it.filled_rectangle(it.get_width()-40, 0, 40, 40, Color(0, 255, 0));               // GREEN TR
+      it.filled_rectangle(0, it.get_height()-40, 40, 40, Color(0, 0, 255));              // BLUE BL
+      it.filled_rectangle(it.get_width()-40, it.get_height()-40, 40, 40, Color(255,255,0)); // YELLOW BR
+
+      // ---- ARROWS + LABELS ----
+      int cx = it.get_width() / 2;
+      int cy = it.get_height() / 2;
+
+      // UP ↑
+      it.line(cx, cy, cx, cy-60, Color(255,255,255));
+      it.line(cx, cy-60, cx-10, cy-50, Color(255,255,255));
+      it.line(cx, cy-60, cx+10, cy-50, Color(255,255,255));
+      it.printf(cx, cy-80, id(default_font), Color(255,255,255), TextAlign::CENTER, "UP");
+
+      // DOWN ↓
+      it.line(cx, cy, cx, cy+60, Color(255,255,255));
+      it.line(cx, cy+60, cx-10, cy+50, Color(255,255,255));
+      it.line(cx, cy+60, cx+10, cy+50, Color(255,255,255));
+      it.printf(cx, cy+80, id(default_font), Color(255,255,255), TextAlign::CENTER, "DOWN");
+
+      // LEFT ←
+      it.line(cx, cy, cx-60, cy, Color(255,255,255));
+      it.line(cx-60, cy, cx-50, cy-10, Color(255,255,255));
+      it.line(cx-60, cy, cx-50, cy+10, Color(255,255,255));
+      it.printf(cx-90, cy, id(default_font), Color(255,255,255), TextAlign::CENTER, "LEFT");
+
+      // RIGHT →
+      it.line(cx, cy, cx+60, cy, Color(255,255,255));
+      it.line(cx+60, cy, cx+50, cy-10, Color(255,255,255));
+      it.line(cx+60, cy, cx+50, cy+10, Color(255,255,255));
+      it.printf(cx+90, cy, id(default_font), Color(255,255,255), TextAlign::CENTER, "RIGHT");
+
+      // ---- Touch readout as text ----
+      if(id(last_color) != "") {
+        it.printf(cx, cy+120, id(default_font), Color(255,255,255), TextAlign::CENTER, "%s", id(last_color).c_str());
+      }
+
+output:
+  - platform: ledc
+    id: tft_bl
+    pin: 21
+    frequency: 20000 Hz
+
+light:
+  - platform: monochromatic
+    id: backlight
+    output: tft_bl
+    restore_mode: ALWAYS_ON
+
+text_sensor:
+  - platform: template
+    name: "Touch Raw X"
+    id: raw_x
+    update_interval: never
+
+  - platform: template
+    name: "Touch Raw Y"
+    id: raw_y
+    update_interval: never
+
+
+sensor:
+  - platform: template
+    name: "Touch Raw X Numeric"
+    id: raw_x_sensor
+    update_interval: 50ms
+    lambda: |-
+      return id(raw_x).state != "" ? atof(id(raw_x).state.c_str()) : 0;
+
+  - platform: template
+    name: "Touch Raw Y Numeric"
+    id: raw_y_sensor
+    update_interval: 50ms
+    lambda: |-
+      return id(raw_y).state != "" ? atof(id(raw_y).state.c_str()) : 0;
+
+
+touchscreen:
+  - platform: xpt2046
+    id: ts
+    spi_id: spi_touch
+    cs_pin: 22
+
+    calibration:
+      x_min: 300
+      x_max: 3900
+      y_min: 300
+      y_max: 3900
+
+    transform:
+      swap_xy: true
+
+
+but i think thised be better start 
+ILI9481	320x480
+ILI9486	320x480
+ILI9488	320x480
+ILI9488_A	320x480
+ST7796	320x480
+https://esphome.io/components/display/mipi_spi/#mipi_spi
