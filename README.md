@@ -11,3 +11,5 @@ ld2450 https://amazon.com/dp/B0CGNMCTRC
 screen(i used https://amazon.com/dp/B0CKRJ81B5)  
 batterys or portable power source  
 
+the main cpp file your looking for is in ESP32-S3/COD2/src/main.cpp or COD/src/main.cpp
+
