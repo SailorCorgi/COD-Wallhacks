@@ -13,3 +13,8 @@ batterys or portable power source
 
 the main cpp file your looking for is in ESP32-S3/COD2/src/main.cpp or COD/src/main.cpp
 
+<img width="9634" height="8600" alt="20260619_104248" src="https://github.com/user-attachments/assets/8da9d7b6-cba5-4cc1-a7ef-54fa6a7a0248" />
+<img width="9244" height="9244" alt="20260619_104251" src="https://github.com/user-attachments/assets/793703bd-7207-4b35-8010-b0a851bffb71" />
+
+
+
